@@ -430,16 +430,33 @@ deck.addEventListener(
   { passive: true }
 );
 
-deck.addEventListener(
+let wheelAcc = 0;
+let wheelReset = 0;
+window.addEventListener(
   "wheel",
   (e) => {
     e.preventDefault();
     if (locked) return;
-    const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
-    if (Math.abs(delta) > 18) goTo(index + (delta > 0 ? 1 : -1));
+    const raw = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    const scaled =
+      e.deltaMode === 1 ? raw * 16 : e.deltaMode === 2 ? raw * 800 : raw;
+    wheelAcc += scaled;
+    window.clearTimeout(wheelReset);
+    wheelReset = window.setTimeout(() => {
+      wheelAcc = 0;
+    }, 180);
+    if (Math.abs(wheelAcc) < 24) return;
+    const dir = wheelAcc > 0 ? 1 : -1;
+    wheelAcc = 0;
+    goTo(index + dir);
   },
   { passive: false }
 );
+
+deck.addEventListener("click", (e) => {
+  if (e.target.closest("a, button, .navbtn, .pic-glass, input, textarea")) return;
+  goTo(index + 1);
+});
 
 let touchX = 0;
 deck.addEventListener(
