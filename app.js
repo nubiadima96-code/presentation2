@@ -1,0 +1,513 @@
+const deck = document.getElementById("deck");
+const progressBar = document.getElementById("progressBar");
+const slideNum = document.getElementById("slideNum");
+const slideTotal = document.getElementById("slideTotal");
+const prevBtn = document.getElementById("prevBtn");
+const nextBtn = document.getElementById("nextBtn");
+const muteBtn = document.getElementById("muteBtn");
+const fullBtn = document.getElementById("fullBtn");
+const sectionName = document.getElementById("sectionName");
+
+let slidesData = [];
+let index = 0;
+let locked = false;
+
+const pad = (n) => String(n).padStart(2, "0");
+
+const escapeHtml = (str = "") =>
+  String(str)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;");
+
+const formatCaption = (raw = "") => {
+  let c = escapeHtml(raw);
+  c = c.replace(/Ю\.\s*В\.\s*Лай/g, "Ю.&nbsp;В.&nbsp;Лай");
+  c = c.replace(
+    /\s*·\s*We (?:don’t|don't|don(?:&rsquo;)?t) lie/gi,
+    '<span class="title-tagline">We&nbsp;don’t&nbsp;lie</span>'
+  );
+  c = c.replace(/(\d)–(\d)/g, "$1–$2");
+  return c;
+};
+
+const ILLUSTRATIONS = {
+  6: "assets/ill/p006.jpg?v=17",
+  9: "assets/ill/p009.jpg?v=17",
+  18: "assets/ill/p018.jpg?v=17",
+  19: "assets/ill/p019.jpg?v=17",
+  23: "assets/ill/p023.jpg?v=17",
+  24: "assets/ill/p024.jpg?v=17",
+  26: "assets/ill/p026.jpg?v=17",
+  34: "assets/ill/p034.jpg?v=17",
+  44: "assets/ill/p044.jpg?v=17",
+  45: "assets/ill/p045.jpg?v=17",
+  46: "assets/ill/p046.jpg?v=17",
+  47: "assets/ill/p047.jpg?v=17",
+  75: "assets/ill/p075.jpg?v=17",
+  77: "assets/ill/p077.jpg?v=17",
+  200: "assets/ill/p200.jpg?v=17",
+  201: "assets/ill/p201.jpg?v=17",
+  202: "assets/ill/p202.jpg?v=17",
+  203: "assets/ill/p203.jpg?v=17",
+  207: "assets/ill/p207.jpg?v=21",
+  208: "assets/ill/p208.jpg?v=17",
+  209: "assets/ill/p209.jpg?v=17",
+  210: "assets/ill/p210.jpg?v=17",
+  216: "assets/ill/p216.jpg?v=17",
+};
+
+const ratioOf = (p) => (p.w || 1) / (p.h || 1);
+
+/** Pick layout that never forces a crop */
+const pickLayout = (photos) => {
+  if (!photos.length) return "empty";
+  if (photos.length === 1) return "single";
+  if (photos.length === 2) return "duo";
+  if (photos.length === 3) return "trio";
+  return "stack";
+};
+
+/** Size limits so the whole bitmap fits on screen (never cropped) */
+const sizeStyle = (p, layout) => {
+  const tall = ratioOf(p) < 0.85;
+  const wide = ratioOf(p) > 1.25;
+
+  if (layout === "single") {
+    if (tall) {
+      return "max-width:min(46vw,520px);max-height:min(72vh,760px);";
+    }
+    if (wide) {
+      return "max-width:min(90vw,1000px);max-height:min(54vh,580px);";
+    }
+    return "max-width:min(72vw,680px);max-height:min(58vh,620px);";
+  }
+
+  if (layout === "duo") {
+    if (tall) {
+      return "max-width:min(32vw,380px);max-height:min(48vh,480px);";
+    }
+    return "max-width:min(46vw,680px);max-height:min(48vh,480px);";
+  }
+
+  if (layout === "trio") {
+    return "max-width:min(30vw,360px);max-height:min(58vh,560px);";
+  }
+
+  if (layout === "ill") {
+    return "max-width:min(46vw,560px);max-height:min(62vh,540px);";
+  }
+
+  if (layout === "aside") {
+    if (tall) {
+      return "max-width:min(28vw,340px);max-height:min(62vh,640px);";
+    }
+    return "max-width:min(52vw,620px);max-height:min(28vh,300px);";
+  }
+
+  // stack: readable sizes, full image visible
+  if (tall) {
+    return "max-width:min(36vw,320px);max-height:min(34vh,380px);";
+  }
+  if (wide) {
+    return "max-width:min(78vw,860px);max-height:min(28vh,300px);";
+  }
+  return "max-width:min(52vw,480px);max-height:min(32vh,340px);";
+};
+
+const picTag = (p, layout) => {
+  const style = `${sizeStyle(p, layout)}width:auto;height:auto;object-fit:contain;object-position:center;`;
+  const src = p.src.includes("?") ? p.src : `${p.src}?v=20`;
+  return `<span class="pic-glass"><span class="pic-glass__in"><img class="pic" src="./${escapeHtml(src)}" alt="" decoding="async" draggable="false" style="${style}" /></span></span>`;
+};
+
+const mediaHTML = (s) => {
+  if (ILLUSTRATIONS[s.id]) {
+    const p = { src: ILLUSTRATIONS[s.id], w: 1600, h: 1200 };
+    return `<div class="slide__media slide__media--ill">${picTag(p, "ill")}</div>`;
+  }
+
+  if (s.placeholder || s.layout === "placeholder") {
+    return `<div class="slide__media slide__media--single">
+      <div class="ph">
+        <span class="ph__label">Тут буде фото</span>
+        <span class="ph__hint">${escapeHtml(s.caption || "")}</span>
+      </div>
+    </div>`;
+  }
+
+  const photos = s.photos || [];
+  if (!photos.length) return "";
+
+  const tall = photos.filter((p) => ratioOf(p) < 0.85);
+  const rest = photos.filter((p) => ratioOf(p) >= 0.85);
+
+  // 1 tall + 2 landscape: tall on the side, two wides stacked (slide 14)
+  if (
+    photos.length === 3 &&
+    tall.length === 1 &&
+    rest.length === 2 &&
+    rest.every((p) => ratioOf(p) > 1.25)
+  ) {
+    return `<div class="slide__media slide__media--aside">
+      ${picTag(tall[0], "aside")}
+      <div class="slide__col">${rest.map((p) => picTag(p, "aside")).join("")}</div>
+    </div>`;
+  }
+
+  const layout = pickLayout(photos);
+  return `<div class="slide__media slide__media--${layout}">${photos
+    .map((p) => picTag(p, layout))
+    .join("")}</div>`;
+};
+
+const themeOf = (section = "") => {
+  const s = section.toLowerCase();
+  if (s.includes("дитинств")) return "warm";
+  if (
+    s.includes("реконструкц") ||
+    s.includes("школа") ||
+    s.includes("ментор") ||
+    s.includes("клінік") ||
+    s.includes("радівилів")
+  ) {
+    return "cold";
+  }
+  if (s.includes("титул")) return "intro";
+  if (s.includes("філософ") || s.includes("контакт")) return "finale";
+  return "mid";
+};
+
+const buildSlide = (s, i) => {
+  const isPlaceholder = !!(s.placeholder || s.layout === "placeholder");
+  const isIll = !!ILLUSTRATIONS[s.id];
+  const isText = (!(s.photos && s.photos.length) && !isPlaceholder) || isIll;
+  const section = escapeHtml(s.section || "DSC");
+  const caption = formatCaption(s.caption || `Слайд ${s.id}`);
+  const theme = themeOf(s.section || "");
+
+  const isContact = s.id === 217 || (s.section || "") === "Контакт";
+  const photos = s.photos || [];
+  const isSide =
+    !isText &&
+    !isPlaceholder &&
+    !isContact &&
+    !isIll &&
+    photos.length === 1 &&
+    ratioOf(photos[0]) < 0.85;
+  const el = document.createElement("section");
+  el.className = `slide slide--${theme}${isText ? " slide--text" : ""}${isContact ? " slide--contact" : ""}${isSide ? " slide--side" : ""}${isIll ? " slide--quote-ill" : ""}${i === 0 ? " slide--intro" : ""}`;
+  el.dataset.index = String(i);
+  el.dataset.section = s.section || "DSC";
+  el.setAttribute("aria-label", `Слайд ${s.id}`);
+
+  const titleBlock = isContact
+    ? `<div class="contact">
+        <p class="contact__kicker">DSC on AIR</p>
+        <a class="contact__phone" href="tel:+380995646545">+380 99 564 65 45</a>
+        <p class="contact__hint">Натисни номер або скануй QR</p>
+        <a class="contact__qr" href="tel:+380995646545">
+          <img src="./assets/qr-phone.svg" alt="QR: подзвонити DSC" />
+          <span>Подзвонити</span>
+        </a>
+      </div>`
+    : isText
+      ? `<div class="quote"><i class="quote__line" aria-hidden="true"></i><h1 class="slide__title">${caption}</h1></div>`
+      : `<h1 class="slide__title">${caption}</h1>`;
+
+  el.innerHTML = `
+    <div class="slide__stage">${mediaHTML(s)}</div>
+    ${i === 0 ? `<p class="intro-hint" id="introHint">листай →</p>` : ""}
+    <div class="slide__copy">
+      <div class="slide__copy-inner">
+        ${isContact ? "" : `<p class="slide__kicker">${section}</p>`}
+        ${titleBlock}
+      </div>
+    </div>
+  `;
+  return el;
+};
+
+const slidesEls = () => [...deck.querySelectorAll(".slide")];
+
+const loadAround = (i) => {
+  [i - 1, i, i + 1, i + 2].forEach((n) => {
+    if (n < 0 || n >= slidesData.length) return;
+    slidesEls()[n]?.querySelectorAll("img.pic").forEach((img) => {
+      img.classList.add("is-ready");
+    });
+  });
+};
+
+const setBackdrop = (section) => {
+  const theme = themeOf(section || "");
+  document.querySelectorAll(".backdrop__tone").forEach((el) => {
+    el.classList.toggle("is-on", el.dataset.theme === theme);
+  });
+  const backdrop = document.getElementById("backdrop");
+  backdrop?.setAttribute("data-active", theme);
+  document.body.dataset.theme = theme;
+};
+
+const updateUI = () => {
+  const total = slidesData.length || 1;
+  progressBar.style.width = `${((index + 1) / total) * 100}%`;
+  slideNum.textContent = pad(index + 1);
+  slideTotal.textContent = String(total);
+  const current = slidesData[index];
+  if (sectionName) sectionName.textContent = current?.section || "DSC";
+  setBackdrop(current?.section);
+  prevBtn.disabled = index === 0;
+  nextBtn.disabled = index >= total - 1;
+  slidesEls().forEach((el, i) => el.classList.toggle("is-active", i === index));
+  loadAround(index);
+  history.replaceState(null, "", `#${index + 1}`);
+};
+
+const easeOutQuint = (t) => 1 - (1 - t) ** 5;
+
+const animateScrollTo = (left, duration = 760) => {
+  const from = deck.scrollLeft;
+  const dist = left - from;
+  if (Math.abs(dist) < 1) return Promise.resolve();
+  const start = performance.now();
+  return new Promise((resolve) => {
+    const tick = (now) => {
+      const t = Math.min(1, (now - start) / duration);
+      deck.scrollLeft = from + dist * easeOutQuint(t);
+      if (t < 1) requestAnimationFrame(tick);
+      else {
+        deck.scrollLeft = left;
+        resolve();
+      }
+    };
+    requestAnimationFrame(tick);
+  });
+};
+
+let audioCtx = null;
+let muted = localStorage.getItem("dsc-mute") === "1";
+
+const syncMuteBtn = () => {
+  if (!muteBtn) return;
+  muteBtn.textContent = muted ? "🔇" : "♪";
+  muteBtn.setAttribute("aria-pressed", muted ? "true" : "false");
+  muteBtn.title = muted ? "Звук вимкнено" : "Звук перегортання";
+};
+
+const playTurn = () => {
+  if (muted) return;
+  try {
+    audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
+    if (audioCtx.state === "suspended") audioCtx.resume();
+    const t = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "sine";
+    osc.frequency.setValueAtTime(380, t);
+    osc.frequency.exponentialRampToValueAtTime(160, t + 0.14);
+    gain.gain.setValueAtTime(0.035, t);
+    gain.gain.exponentialRampToValueAtTime(0.001, t + 0.16);
+    osc.connect(gain).connect(audioCtx.destination);
+    osc.start(t);
+    osc.stop(t + 0.18);
+  } catch (_) {
+    /* ignore */
+  }
+};
+
+const goTo = (i, behavior = "smooth") => {
+  const next = Math.max(0, Math.min(slidesData.length - 1, i));
+  const changed = next !== index;
+  index = next;
+  locked = true;
+  const target = slidesEls()[index];
+  if (changed && behavior !== "auto") playTurn();
+  updateUI();
+  const finish = () => {
+    const el = slidesEls()[index];
+    if (el) deck.scrollLeft = el.offsetLeft;
+    locked = false;
+  };
+  if (!target) {
+    finish();
+    return;
+  }
+  if (behavior === "auto") {
+    deck.scrollLeft = target.offsetLeft;
+    window.setTimeout(finish, 24);
+    return;
+  }
+  animateScrollTo(target.offsetLeft, 760).then(finish);
+};
+
+const syncFromScroll = () => {
+  if (locked) return;
+  const list = slidesEls();
+  const mid = deck.scrollLeft + deck.clientWidth / 2;
+  let best = 0;
+  let bestDist = Infinity;
+  list.forEach((s, i) => {
+    const center = s.offsetLeft + s.offsetWidth / 2;
+    const dist = Math.abs(center - mid);
+    if (dist < bestDist) {
+      bestDist = dist;
+      best = i;
+    }
+  });
+  if (best !== index) {
+    index = best;
+    updateUI();
+  }
+};
+
+prevBtn.addEventListener("click", () => goTo(index - 1));
+nextBtn.addEventListener("click", () => goTo(index + 1));
+
+const toggleMute = () => {
+  muted = !muted;
+  localStorage.setItem("dsc-mute", muted ? "1" : "0");
+  syncMuteBtn();
+};
+
+const toggleFullscreen = () => {
+  if (!document.fullscreenElement) {
+    document.documentElement.requestFullscreen?.();
+  } else {
+    document.exitFullscreen?.();
+  }
+};
+
+muteBtn?.addEventListener("click", toggleMute);
+fullBtn?.addEventListener("click", toggleFullscreen);
+
+window.addEventListener(
+  "keydown",
+  (e) => {
+    if (["ArrowRight", "PageDown", " "].includes(e.key)) {
+      e.preventDefault();
+      goTo(index + 1);
+    }
+    if (["ArrowLeft", "PageUp"].includes(e.key)) {
+      e.preventDefault();
+      goTo(index - 1);
+    }
+    if (e.key === "Home") {
+      e.preventDefault();
+      goTo(0);
+    }
+    if (e.key === "End") {
+      e.preventDefault();
+      goTo(slidesData.length - 1);
+    }
+    if (e.key === "f" || e.key === "F") {
+      e.preventDefault();
+      toggleFullscreen();
+    }
+    if (e.key === "m" || e.key === "M") {
+      e.preventDefault();
+      toggleMute();
+    }
+    if (e.key === "Escape" && document.fullscreenElement) {
+      document.exitFullscreen?.();
+    }
+  },
+  { passive: false }
+);
+
+let tick = false;
+deck.addEventListener(
+  "scroll",
+  () => {
+    if (tick) return;
+    tick = true;
+    requestAnimationFrame(() => {
+      syncFromScroll();
+      tick = false;
+    });
+  },
+  { passive: true }
+);
+
+deck.addEventListener(
+  "wheel",
+  (e) => {
+    e.preventDefault();
+    if (locked) return;
+    const delta = Math.abs(e.deltaX) > Math.abs(e.deltaY) ? e.deltaX : e.deltaY;
+    if (Math.abs(delta) > 18) goTo(index + (delta > 0 ? 1 : -1));
+  },
+  { passive: false }
+);
+
+let touchX = 0;
+deck.addEventListener(
+  "touchstart",
+  (e) => {
+    touchX = e.changedTouches[0]?.clientX || 0;
+  },
+  { passive: true }
+);
+deck.addEventListener(
+  "touchmove",
+  (e) => {
+    e.preventDefault();
+  },
+  { passive: false }
+);
+deck.addEventListener(
+  "touchend",
+  (e) => {
+    const x = e.changedTouches[0]?.clientX || 0;
+    const dx = x - touchX;
+    if (Math.abs(dx) < 48 || locked) return;
+    goTo(index + (dx < 0 ? 1 : -1));
+  },
+  { passive: true }
+);
+
+const boot = async () => {
+  const res = await fetch("./assets/slides.json");
+  const data = await res.json();
+  slidesData = data.slides || [];
+
+  slidesData.forEach((s) => {
+    const seen = new Set();
+    s.photos = (s.photos || []).filter((p) => {
+      if (!p?.src || seen.has(p.src)) return false;
+      seen.add(p.src);
+      return true;
+    });
+  });
+
+  const frag = document.createDocumentFragment();
+  slidesData.forEach((s, i) => frag.append(buildSlide(s, i)));
+  deck.append(frag);
+
+  const hash = Number(location.hash.replace("#", ""));
+  const start = Number.isFinite(hash) && hash >= 1 && hash <= slidesData.length ? hash - 1 : 0;
+  goTo(start, "auto");
+  deck.focus({ preventScroll: true });
+
+  syncMuteBtn();
+
+  const first = slidesEls()[0];
+  if (first) {
+    const skipMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (start !== 0 || skipMotion) {
+      first.classList.add("is-intro-done");
+    } else {
+      window.setTimeout(() => {
+        first.classList.add("is-intro-done");
+        const hint = document.getElementById("introHint");
+        if (hint) {
+          hint.classList.add("is-on");
+          window.setTimeout(() => hint.classList.remove("is-on"), 2000);
+        }
+      }, 2400);
+    }
+  }
+};
+
+boot().catch((err) => console.error(err));

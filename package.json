@@ -1,0 +1,10 @@
+{
+  "name": "dsc-shlyakh",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Шлях важливіший за ціль — скрол-презинтація DSC Implantology",
+  "scripts": {
+    "dev": "npx --yes serve . -p 5173",
+    "start": "npx --yes serve . -p 5173"
+  }
+}

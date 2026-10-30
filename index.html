@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="uk">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Шлях важливіший за ціль — Ю. В. Лай | DSC</title>
+    <meta name="description" content="Від першого імпланта до навчання лікарів" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@0,600;0,700;1,600&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./styles.css?v=mood21" />
+    <style>
+      .pic-glass {
+        overflow: hidden !important;
+        padding: 10px;
+      }
+      .pic-glass__in {
+        overflow: hidden !important;
+        border-radius: 14px;
+      }
+      .slide__media img,
+      .pic {
+        object-fit: contain !important;
+        object-position: center !important;
+        opacity: 1 !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="backdrop" id="backdrop" aria-hidden="true">
+      <div class="backdrop__tone backdrop__tone--mid is-on" data-theme="mid"></div>
+      <div class="backdrop__tone backdrop__tone--warm" data-theme="warm"></div>
+      <div class="backdrop__tone backdrop__tone--cold" data-theme="cold"></div>
+      <div class="backdrop__tone backdrop__tone--finale" data-theme="finale"></div>
+      <div class="backdrop__tone backdrop__tone--intro" data-theme="intro"></div>
+      <div class="slide__orb slide__orb--a"></div>
+      <div class="slide__orb slide__orb--b"></div>
+      <svg class="slide__waves" viewBox="0 0 1440 600" preserveAspectRatio="none">
+        <path d="M0 360 Q240 260 480 340 T960 320 T1440 360 V600 H0Z" fill="rgba(255,255,255,0.16)"/>
+        <path d="M0 420 Q300 330 600 400 T1200 380 T1440 430 V600 H0Z" fill="rgba(180,230,255,0.22)"/>
+        <path d="M0 480 Q360 420 720 470 T1440 490 V600 H0Z" fill="rgba(255,255,255,0.12)"/>
+      </svg>
+    </div>
+
+    <header class="chrome">
+      <div class="chrome__brand">
+        <img class="chrome__logo" src="./dsc%20horizontal.svg" alt="DSC Implantology" />
+        <span class="chrome__sep" aria-hidden="true">—</span>
+        <span class="chrome__title">Від першого імпланта до навчання лікарів</span>
+      </div>
+      <div class="chrome__right">We don’t lie</div>
+    </header>
+
+    <main class="deck" id="deck" tabindex="0" aria-label="Презинтація"></main>
+
+    <footer class="chrome chrome--bottom">
+      <div class="chrome__progress">
+        <span class="chrome__count"><span id="slideNum">01</span> / <span id="slideTotal">217</span></span>
+        <span class="chrome__section" id="sectionName">Титул</span>
+        <div class="chrome__bar" aria-hidden="true"><i id="progressBar"></i></div>
+      </div>
+      <div class="chrome__nav">
+        <span class="chrome__hint">ARROWS · F</span>
+        <button type="button" id="muteBtn" class="navbtn navbtn--icon" aria-label="Звук" title="Звук перегортання">♪</button>
+        <button type="button" id="fullBtn" class="navbtn navbtn--icon" aria-label="На весь екран" title="Fullscreen (F)">⛶</button>
+        <button type="button" id="prevBtn" class="navbtn" aria-label="Назад">←</button>
+        <button type="button" id="nextBtn" class="navbtn" aria-label="Далі">→</button>
+      </div>
+    </footer>
+
+    <script src="./app.js?v=mood21" type="module"></script>
+  </body>
+</html>
