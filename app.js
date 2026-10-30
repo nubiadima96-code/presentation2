@@ -69,57 +69,49 @@ const pickLayout = (photos) => {
   return "stack";
 };
 
-/** Size limits so the whole bitmap fits on screen (never cropped) */
+/** Fill the right-hand stage, never cropped, never off-canvas */
 const sizeStyle = (p, layout) => {
   const tall = ratioOf(p) < 0.85;
-  const wide = ratioOf(p) > 1.25;
+  const stage = "(100vw - min(28vw, 420px) - 40px)";
+  const fullH = "calc(100svh - 148px)";
+  const halfH = "calc((100svh - 168px) / 2)";
 
-  if (layout === "single") {
-    if (tall) {
-      return "max-width:min(46vw,520px);max-height:min(72vh,760px);";
-    }
-    if (wide) {
-      return "max-width:min(90vw,1000px);max-height:min(54vh,580px);";
-    }
-    return "max-width:min(72vw,680px);max-height:min(58vh,620px);";
+  if (layout === "intro-duo") {
+    return `max-width:calc(50vw - 40px);max-height:${halfH};`;
+  }
+
+  if (layout === "single" || layout === "ill") {
+    return `max-width:calc(100vw - min(26vw, 380px) - 28px);max-height:calc(100svh - 120px);`;
   }
 
   if (layout === "duo") {
-    if (tall) {
-      return "max-width:min(32vw,380px);max-height:min(48vh,480px);";
-    }
-    return "max-width:min(46vw,680px);max-height:min(48vh,480px);";
+    return `max-width:calc(${stage} / 2 - 10px);max-height:${fullH};`;
   }
 
   if (layout === "trio") {
-    return "max-width:min(30vw,360px);max-height:min(58vh,560px);";
-  }
-
-  if (layout === "ill") {
-    return "max-width:min(46vw,560px);max-height:min(62vh,540px);";
+    return `max-width:calc(${stage} / 3 - 10px);max-height:${fullH};`;
   }
 
   if (layout === "aside") {
     if (tall) {
-      return "max-width:min(28vw,340px);max-height:min(62vh,640px);";
+      return `max-width:calc(${stage} * 0.44);max-height:${fullH};`;
     }
-    return "max-width:min(52vw,620px);max-height:min(28vh,300px);";
+    return `max-width:calc(${stage} * 0.54);max-height:${halfH};`;
   }
 
-  // stack: readable sizes, full image visible
   if (tall) {
-    return "max-width:min(36vw,320px);max-height:min(34vh,380px);";
+    return `max-width:calc(${stage} * 0.72);max-height:${halfH};`;
   }
-  if (wide) {
-    return "max-width:min(78vw,860px);max-height:min(28vh,300px);";
-  }
-  return "max-width:min(52vw,480px);max-height:min(32vh,340px);";
+  return `max-width:calc${stage};max-height:${halfH};`;
 };
 
 const picTag = (p, layout) => {
   const style = `${sizeStyle(p, layout)}width:auto;height:auto;object-fit:contain;object-position:center;`;
-  const src = p.src.includes("?") ? p.src : `${p.src}?v=20`;
-  return `<span class="pic-glass"><span class="pic-glass__in"><img class="pic" src="./${escapeHtml(src)}" alt="" decoding="async" draggable="false" style="${style}" /></span></span>`;
+  const src = p.src.includes("?") ? p.src : `${p.src}?v=35`;
+  const solo = layout === "single" || layout === "ill";
+  const tall = ratioOf(p) < 0.9;
+  const cls = `pic-glass${solo || tall ? " pic-glass--solo" : ""}`;
+  return `<span class="${cls}"><span class="pic-glass__in"><img class="pic" src="./${escapeHtml(src)}" alt="" decoding="async" draggable="false" style="${style}" /></span></span>`;
 };
 
 const mediaHTML = (s) => {
@@ -156,6 +148,12 @@ const mediaHTML = (s) => {
     </div>`;
   }
 
+  if (s.id === 1 && photos.length === 2) {
+    return `<div class="slide__media slide__media--intro-duo">${photos
+      .map((p) => picTag(p, "intro-duo"))
+      .join("")}</div>`;
+  }
+
   const layout = pickLayout(photos);
   return `<div class="slide__media slide__media--${layout}">${photos
     .map((p) => picTag(p, layout))
@@ -189,13 +187,7 @@ const buildSlide = (s, i) => {
 
   const isContact = s.id === 217 || (s.section || "") === "Контакт";
   const photos = s.photos || [];
-  const isSide =
-    !isText &&
-    !isPlaceholder &&
-    !isContact &&
-    !isIll &&
-    photos.length === 1 &&
-    ratioOf(photos[0]) < 0.85;
+  const isSide = !isContact && !isIll && (photos.length > 0 || isPlaceholder);
   const el = document.createElement("section");
   el.className = `slide slide--${theme}${isText ? " slide--text" : ""}${isContact ? " slide--contact" : ""}${isSide ? " slide--side" : ""}${isIll ? " slide--quote-ill" : ""}${i === 0 ? " slide--intro" : ""}`;
   el.dataset.index = String(i);
@@ -318,6 +310,7 @@ const playTurn = () => {
 };
 
 const goTo = (i, behavior = "smooth") => {
+  hidePicZoom();
   const next = Math.max(0, Math.min(slidesData.length - 1, i));
   const changed = next !== index;
   index = next;
@@ -364,6 +357,73 @@ const syncFromScroll = () => {
 
 prevBtn.addEventListener("click", () => goTo(index - 1));
 nextBtn.addEventListener("click", () => goTo(index + 1));
+
+let zoomGlass = null;
+
+const hidePicZoom = () => {
+  const layer = document.getElementById("picZoom");
+  const card = layer?.querySelector(".pic-zoom__card");
+  zoomGlass?.classList.remove("is-zooming");
+  zoomGlass = null;
+  if (card) {
+    card.style.transition = "none";
+    card.style.transform = "";
+  }
+  if (layer) {
+    layer.hidden = true;
+    layer.setAttribute("aria-hidden", "true");
+  }
+};
+
+const showPicZoom = (glass) => {
+  const layer = document.getElementById("picZoom");
+  const card = layer?.querySelector(".pic-zoom__card");
+  const layerImg = layer?.querySelector("img");
+  const img = glass.querySelector("img.pic");
+  if (!layer || !card || !layerImg || !img) return;
+  if (zoomGlass === glass) return;
+  hidePicZoom();
+  zoomGlass = glass;
+  layerImg.src = img.currentSrc || img.src;
+  const from = glass.getBoundingClientRect();
+  glass.classList.add("is-zooming");
+  layer.hidden = false;
+  layer.setAttribute("aria-hidden", "false");
+  const play = () => {
+    if (zoomGlass !== glass) return;
+    card.style.transition = "none";
+    card.style.transform = "none";
+    const to = card.getBoundingClientRect();
+    if (!to.width || !to.height) return;
+    const s = Math.min(from.width / to.width, from.height / to.height);
+    card.style.transformOrigin = "top left";
+    card.style.transform = `translate(${from.left - to.left}px, ${from.top - to.top}px) scale(${s})`;
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        if (zoomGlass !== glass) return;
+        card.style.transition = "transform 0.42s cubic-bezier(0.22, 1, 0.36, 1)";
+        card.style.transform = "translate(0, 0) scale(1)";
+      });
+    });
+  };
+  if (layerImg.complete) play();
+  else layerImg.addEventListener("load", play, { once: true });
+};
+
+deck.addEventListener("pointerover", (e) => {
+  const glass = e.target.closest(".pic-glass");
+  if (!glass || glass.closest("#picZoom") || glass.classList.contains("pic-glass--solo")) return;
+  if (glass.closest(".slide__media--single, .slide__media--ill")) return;
+  showPicZoom(glass);
+});
+deck.addEventListener("pointerout", (e) => {
+  const glass = e.target.closest(".pic-glass");
+  if (!glass) return;
+  const next = e.relatedTarget;
+  if (next && glass.contains(next)) return;
+  if (next && deck.contains(next) && next.closest?.(".pic-glass")) return;
+  hidePicZoom();
+});
 
 const toggleMute = () => {
   muted = !muted;
@@ -485,7 +545,7 @@ deck.addEventListener(
 );
 
 const boot = async () => {
-  const res = await fetch("./assets/slides.json");
+  const res = await fetch("./assets/slides.json?v=35");
   const data = await res.json();
   slidesData = data.slides || [];
 

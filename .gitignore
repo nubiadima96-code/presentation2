@@ -6,3 +6,4 @@ dist/
 *.log
 content_all.txt
 *.pdf
+.vercel
