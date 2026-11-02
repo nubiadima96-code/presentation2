@@ -5,6 +5,12 @@
   --navy: #1a5fa8;
   --ink: #f4f8fc;
   --ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* One scale for the whole deck — big-screen readable */
+  --title-size: clamp(2.1rem, 3.8vw, 3.25rem);
+  --sub-size: clamp(1.45rem, 2.5vw, 2.2rem);
+  --cap-size: clamp(1.45rem, 2.5vw, 2.2rem);
+  --title-color: #0a1c2e;
+  --sub-color: #3d5f7a;
 }
 
 *,
@@ -64,25 +70,9 @@ body {
   opacity: 0.94;
 }
 
-.chrome__sep {
-  font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: 1.15rem;
-  font-weight: 500;
-  opacity: 0.42;
-  transform: translateY(-1px);
-}
-
+.chrome__sep,
 .chrome__title {
-  font-family: "Cormorant Garamond", Georgia, serif;
-  font-size: clamp(1.15rem, 2.1vw, 1.55rem);
-  font-weight: 600;
-  font-style: italic;
-  letter-spacing: 0.01em;
-  line-height: 1.2;
-  max-width: min(58vw, 640px);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  display: none;
 }
 
 .chrome__mark {
@@ -93,8 +83,28 @@ body {
   top: auto;
   bottom: 0;
   padding-bottom: 18px;
-  align-items: flex-end;
+  align-items: center;
   gap: 16px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+}
+
+.chrome__motto {
+  margin: 0;
+  justify-self: center;
+  text-align: center;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(0.95rem, 1.5vw, 1.2rem);
+  font-weight: 600;
+  font-style: italic;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  color: rgba(17, 24, 39, 0.72);
+  white-space: nowrap;
+  max-width: min(46vw, 520px);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  pointer-events: none;
 }
 
 .chrome__progress {
@@ -102,7 +112,7 @@ body {
   align-items: center;
   gap: 14px;
   min-width: 0;
-  flex: 1;
+  justify-self: start;
 }
 
 .chrome__count {
@@ -130,10 +140,11 @@ body {
 .chrome__bar {
   position: relative;
   height: 2px;
-  width: min(220px, 28vw);
+  width: min(88px, 10vw);
   background: rgba(17, 24, 39, 0.16);
   border-radius: 99px;
   overflow: hidden;
+  flex: 0 0 auto;
 }
 
 .chrome__bar i {
@@ -149,6 +160,7 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
+  justify-self: end;
 }
 
 .chrome__hint {
@@ -327,16 +339,88 @@ body {
   flex-direction: row;
 }
 
+.slide__media--video {
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  align-items: center;
+  justify-content: center;
+}
+
+.vid,
+.aud {
+  display: block;
+  width: auto;
+  height: auto;
+  max-width: min(100%, calc(100vw - 96px));
+  max-height: min(100%, calc(100svh - 220px));
+  border-radius: clamp(14px, 1.6vw, 18px);
+  background: #0b1220;
+  box-shadow:
+    0 16px 36px rgba(30, 50, 80, 0.18),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+}
+
+.slide--top .vid,
+.slide--top .aud {
+  max-width: min(100%, calc(100vw - 96px));
+  max-height: min(100%, calc(100svh - 280px));
+}
+
+.vid--tall {
+  max-width: min(42vw, 520px);
+}
+
 .slide__media--duo {
   flex-direction: row !important;
   flex-wrap: nowrap !important;
   align-items: center;
 }
 
-.slide__media:has(> .pic-glass:nth-child(2):last-child):not(.slide__media--intro-duo) {
+.slide__media:has(> :is(.pic-glass, .pic-stack):nth-child(2):last-child):not(.slide__media--intro-duo):not(.slide__media--duo-mixed):not(.slide__media--duo-diagonal) {
   flex-direction: row !important;
   flex-wrap: nowrap !important;
   align-items: center;
+}
+
+/* tall + wide: same height, full photo visible, no crop */
+.slide__media--duo-mixed {
+  container-type: size;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(10px, 1.2vw, 16px);
+  width: 100%;
+  height: 100%;
+}
+
+.slide__media--duo-mixed > :is(.pic-glass, .pic-stack) {
+  flex: 0 1 auto !important;
+  width: fit-content !important;
+  max-width: 100% !important;
+  height: fit-content !important;
+  max-height: 100% !important;
+  min-width: 0 !important;
+  align-self: center;
+}
+
+.slide__media--duo-mixed > .pic-glass {
+  overflow: hidden;
+}
+
+/*
+  Equal height; --duo-div ≈ arTall + arWide + gap so the pair always fits.
+*/
+.slide__media--duo-mixed > :is(.pic-glass, .pic-stack) .pic {
+  width: auto !important;
+  height: min(100cqh, calc((100cqw - 36px) / var(--duo-div, 2.2))) !important;
+  max-width: none !important;
+  max-height: min(100cqh, calc((100cqw - 36px) / var(--duo-div, 2.2))) !important;
+  min-width: 0 !important;
+  object-fit: contain !important;
+  object-position: center !important;
 }
 
 .slide__media--intro-duo {
@@ -355,9 +439,136 @@ body {
   justify-content: center;
 }
 
-.slide__media--trio > .pic-glass {
+.slide__media--trio > :is(.pic-glass, .pic-stack) {
   max-width: calc(33.33% - 12px);
   max-height: 100%;
+}
+
+/* Slide 197 only: three walk photos, identical square frames */
+.slide--even-trio .slide__stage {
+  inset: 80px clamp(20px, 2.4vw, 40px) 80px;
+}
+.slide--even-trio .slide__media--trio {
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  gap: clamp(12px, 1.4vw, 22px);
+}
+.slide--even-trio .slide__media--trio > .pic-glass.pic-glass--solo {
+  flex: 1 1 0;
+  width: auto;
+  height: auto;
+  max-width: calc((100% - 48px) / 3);
+  max-height: 100%;
+  aspect-ratio: 1 / 1;
+}
+.slide--even-trio .slide__media--trio .pic-glass__in {
+  width: 100% !important;
+  height: 100% !important;
+}
+.slide--even-trio .slide__media--trio .pic {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: cover !important;
+}
+
+/* Slide 187 only: title Радивилів above, photos a bit smaller */
+.slide--rady-duo.slide--top .slide__title {
+  text-align: center;
+}
+.slide--rady-duo.slide--top .slide__stage {
+  justify-content: center;
+  align-items: center;
+  margin: 0 clamp(48px, 7vw, 96px) 10px;
+}
+.slide--rady-duo.slide--top .slide__media {
+  justify-content: center;
+  gap: clamp(16px, 2vw, 28px);
+}
+.slide--rady-duo.slide--top .pic {
+  max-height: min(58vh, 520px) !important;
+  max-width: min(36vw, 400px) !important;
+}
+
+.slide--roles .slide__stage {
+  inset: 72px clamp(18px, 2vw, 36px) 72px;
+}
+
+.slide__media--roles {
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: center;
+  gap: clamp(14px, 1.8vw, 24px);
+  width: 100%;
+  height: 100%;
+}
+
+.slide__media--roles > .pic-stack {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 32%;
+  max-height: 100%;
+}
+
+.slide__media--roles > .pic-stack:nth-child(2) {
+  flex: 1.15 1 0;
+  max-width: 34%;
+}
+
+.slide--roles .pic-stack__cap {
+  order: -1;
+  position: static;
+  transform: none;
+  width: auto;
+  max-width: none;
+  margin: 0;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(1.6rem, 2.8vw, 2.4rem);
+  font-style: italic;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: none;
+  color: #0b1f33;
+  text-align: center;
+}
+
+.slide__media--roles .pic {
+  max-width: 100% !important;
+  max-height: calc(100svh - 240px) !important;
+}
+
+.slide__media--roles > .pic-stack:nth-child(2) .pic {
+  max-height: calc(100svh - 210px) !important;
+}
+
+.roles__col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 34%;
+  max-height: 100%;
+}
+
+.roles__col .pic-stack,
+.roles__col .pic-glass {
+  max-width: 100%;
+}
+
+.roles__col .pic {
+  max-width: 100% !important;
+  max-height: calc((100svh - 250px) / 2) !important;
 }
 
 /* Tall phone screenshots + mixed pairs: one under another */
@@ -367,12 +578,96 @@ body {
   overflow: visible;
 }
 
+/* Slide 41: title above, smaller even 2×2, lifted */
+.slide--clinic-quad.slide--top .slide__title {
+  text-align: center;
+}
+.slide--clinic-quad.slide--top .slide__copy {
+  padding-bottom: 6px;
+}
+.slide--clinic-quad.slide--top .slide__stage {
+  flex: 0 0 auto !important;
+  justify-content: flex-start;
+  align-items: center;
+  overflow: visible;
+  width: min(860px, 70vw) !important;
+  max-width: min(860px, 70vw);
+  margin: 0 auto 48px;
+  max-height: none;
+  height: auto !important;
+}
+.slide--clinic-quad .slide__media--quad {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 12px;
+  width: 100% !important;
+  height: auto !important;
+  max-height: none !important;
+  align-items: start;
+  justify-items: stretch;
+}
+.slide--clinic-quad .slide__media--quad > .pic-glass {
+  display: block !important;
+  position: relative;
+  width: 100% !important;
+  height: auto !important;
+  aspect-ratio: 4 / 3;
+  max-width: none !important;
+  max-height: none !important;
+  min-width: 0;
+  min-height: 0;
+  overflow: hidden !important;
+}
+.slide--clinic-quad .slide__media--quad .pic-glass__in {
+  position: absolute;
+  inset: 8px;
+  width: auto !important;
+  height: auto !important;
+}
+.slide--clinic-quad .slide__media--quad .pic {
+  width: 100% !important;
+  height: 100% !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: cover !important;
+  object-position: center center !important;
+}
+.slide--clinic-quad .slide__media--quad > .pic-glass:nth-child(1) .pic {
+  object-position: 28% 50% !important;
+}
+.slide--clinic-quad .slide__media--quad > .pic-glass:nth-child(4) .pic {
+  object-position: 50% 72% !important;
+}
+
 /* 1 tall + 2 landscape: tall on the side, wides stacked */
 .slide__media--aside {
-  flex-direction: row;
+  flex-direction: row !important;
+  flex-wrap: nowrap !important;
   align-items: center;
   justify-content: center;
   gap: clamp(12px, 1.6vw, 20px);
+  width: 100%;
+  height: 100%;
+}
+
+.slide__media--aside > :is(.pic-glass, .pic-stack) {
+  flex: 0 1 auto;
+  width: fit-content;
+  max-width: 42%;
+  max-height: calc(100svh - 140px);
+}
+
+.slide__media--aside > .pic-glass {
+  overflow: hidden;
+}
+
+.slide__media--aside > :is(.pic-glass, .pic-stack) .pic {
+  max-width: min(42vw, 520px) !important;
+  max-height: calc(100svh - 160px) !important;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
 }
 
 .slide__col {
@@ -381,6 +676,30 @@ body {
   align-items: center;
   justify-content: center;
   gap: clamp(10px, 1.4vw, 16px);
+  flex: 1 1 0;
+  min-width: 0;
+  max-width: 56%;
+  max-height: calc(100svh - 140px);
+}
+
+.slide__col > :is(.pic-glass, .pic-stack) {
+  width: fit-content;
+  max-width: min(52vw, 680px);
+  max-height: calc((100svh - 160px) / 2);
+  flex: 0 0 auto;
+}
+
+.slide__col > .pic-glass {
+  overflow: hidden;
+}
+
+.slide__col > :is(.pic-glass, .pic-stack) .pic {
+  /* leave room for --pic-pad on both sides */
+  max-width: min(calc(52vw - 16px), 664px) !important;
+  max-height: calc((100svh - 180px) / 2 - 16px) !important;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
 }
 
 .slide__media img,
@@ -388,14 +707,13 @@ body {
   display: block !important;
   width: auto;
   height: auto;
-  max-width: 100%;
-  max-height: 100%;
+  /* No % max here — it inflates .pic-glass fit-content unevenly */
   object-fit: contain !important;
   object-position: center center !important;
-  flex: 0 1 auto;
+  flex: 0 0 auto;
   min-width: 0;
   min-height: 0;
-  border-radius: inherit;
+  border-radius: 0; /* rounded by .pic-glass__in clip */
   box-shadow: none;
   background: transparent;
   user-select: none;
@@ -404,32 +722,184 @@ body {
   visibility: visible !important;
 }
 
-.slide__media--duo > .pic-glass,
-.slide__media:has(> .pic-glass:nth-child(2):last-child):not(.slide__media--intro-duo) > .pic-glass {
+.slide__media--duo > :is(.pic-glass, .pic-stack),
+.slide__media:has(> :is(.pic-glass, .pic-stack):nth-child(2):last-child):not(.slide__media--intro-duo):not(.slide__media--duo-mixed):not(.slide__media--duo-diagonal) > :is(.pic-glass, .pic-stack) {
+  /* Cap the frame, not stretch it — image sizeStyle already fits half-stage */
   max-width: calc(50% - 10px);
-  max-height: 100%;
+  width: fit-content;
+  height: fit-content;
   min-width: 0;
 }
 
-.slide__media--intro-duo > .pic-glass {
+/* Keynote-style: top-left + bottom-right — full photos, no crop */
+.slide__media--duo-diagonal {
+  position: relative;
+  display: block !important;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: visible;
+}
+
+.slide--full:has(.slide__media--duo-diagonal) .slide__stage {
+  inset: 80px clamp(18px, 2.2vw, 40px) 88px;
+  overflow: visible;
+}
+
+.slide__media--duo-diagonal > .pic-stack {
+  position: absolute;
+  display: block;
+  width: fit-content;
+  max-width: min(64%, 1040px);
+  max-height: calc(48% - 8px);
+}
+
+.slide__media--duo-diagonal > .pic-stack:first-child {
+  top: 0;
+  left: 0;
+}
+
+.slide__media--duo-diagonal > .pic-stack:last-child {
+  right: 0;
+  bottom: 0;
+}
+
+.slide__media--duo-diagonal > .pic-stack > .pic-glass {
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
+  max-height: 100%;
+  overflow: hidden;
+}
+
+.slide__media--duo-diagonal .pic {
+  width: auto !important;
+  height: auto !important;
+  max-width: min(54vw, 880px) !important;
+  max-height: min(34svh, 380px) !important;
+  object-fit: contain !important;
+}
+
+/* Captions beside photos — same readable scale as slide__sub */
+.slide__media--duo-diagonal .pic-stack__cap {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  width: max-content;
+  max-width: none;
+  margin: 0;
+  padding: 0;
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: var(--cap-size);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--title-color);
+  line-height: 1.2;
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.slide__media--duo-diagonal > .pic-stack--right .pic-stack__cap {
+  left: calc(100% + clamp(28px, 2.8vw, 44px));
+  right: auto;
+  text-align: left;
+}
+
+.slide__media--duo-diagonal > .pic-stack--left .pic-stack__cap {
+  /* Keep clear of the photo frame/shadow — sit in the middle gap */
+  right: calc(100% + clamp(92px, 9vw, 140px));
+  left: auto;
+  text-align: right;
+}
+
+.slide__media--intro-duo > :is(.pic-glass, .pic-stack) {
   max-width: 100% !important;
   max-height: calc(50% - 8px) !important;
   min-width: 0;
   min-height: 0;
 }
 
-.pic-glass {
+/* Per-photo label — above by default, or on the side */
+.pic-stack {
   display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 1vw, 12px);
+  width: fit-content;
+  max-width: 100%;
+  max-height: 100%;
+  min-width: 0;
+  min-height: 0;
+  box-sizing: border-box;
+}
+
+.pic-stack--left {
+  flex-direction: row;
+  align-items: center;
+  gap: clamp(10px, 1.4vw, 18px);
+}
+
+.pic-stack--right {
+  flex-direction: row-reverse;
+  align-items: center;
+  gap: clamp(10px, 1.4vw, 18px);
+}
+
+.pic-stack__cap {
+  flex: 0 0 auto;
+  margin: 0;
+  padding: 0 4px;
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: var(--cap-size);
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+  color: var(--title-color);
+  text-align: center;
+  text-wrap: balance;
+  max-width: 100%;
+}
+
+.pic-stack--left .pic-stack__cap,
+.pic-stack--right .pic-stack__cap {
+  writing-mode: horizontal-tb;
+  max-width: 14ch;
+  text-align: left;
+  font-size: var(--cap-size);
+  letter-spacing: 0.03em;
+}
+
+.pic-stack--right .pic-stack__cap {
+  text-align: right;
+}
+
+.pic-stack > .pic-glass {
+  flex: 0 1 auto;
+  max-width: 100%;
+  max-height: 100%;
+  min-width: 0;
+}
+
+.pic-glass {
+  --pic-pad: 8px;
+  --pic-r: clamp(14px, 1.6vw, 18px);
+  --pic-r-in: calc(var(--pic-r) - var(--pic-pad));
+  display: inline-flex;
   align-items: center;
   justify-content: center;
   align-self: center;
-  padding: 10px;
+  flex: 0 0 auto;
+  padding: var(--pic-pad);
   overflow: hidden;
-  width: max-content;
-  height: max-content;
+  /* Shrink-wrap the photo — never stretch wider/taller than the image */
+  width: fit-content;
+  height: fit-content;
   max-width: 100%;
-  max-height: 100%;
-  border-radius: calc(clamp(12px, 1.5vw, 18px) + 10px);
+  border-radius: var(--pic-r);
   background:
     linear-gradient(165deg, rgba(255, 255, 255, 0.38) 0%, rgba(210, 232, 255, 0.16) 45%, rgba(255, 255, 255, 0.10) 100%);
   border: 1px solid rgba(255, 255, 255, 0.48);
@@ -442,25 +912,32 @@ body {
   box-sizing: border-box;
   min-width: 0;
   min-height: 0;
-  clip-path: inset(0 round calc(clamp(12px, 1.5vw, 18px) + 10px));
   position: relative;
 }
 
 .pic-glass__in {
   display: block;
   overflow: hidden;
-  border-radius: clamp(8px, 1.2vw, 14px);
-  max-width: 100%;
-  max-height: 100%;
+  border-radius: var(--pic-r-in);
+  width: fit-content;
+  height: fit-content;
+  max-width: none;
+  max-height: none;
   line-height: 0;
+  isolation: isolate;
+  flex: 0 0 auto;
 }
 
 .pic-glass__in .pic {
-  max-width: 100%;
-  max-height: 100%;
+  display: block;
   width: auto;
   height: auto;
-  object-fit: contain;
+  /* Absolute max from inline sizeStyle only — % max here stretches the frame */
+  max-width: none;
+  max-height: none;
+  object-fit: contain !important;
+  object-position: center !important;
+  border-radius: var(--pic-r-in) !important;
 }
 
 .ph {
@@ -506,9 +983,194 @@ body {
 }
 
 .slide--side .slide__stage {
-  inset: 72px clamp(12px, 1.6vw, 28px) 72px min(28%, 420px);
+  inset: 64px clamp(12px, 1.6vw, 28px) 64px min(32%, 460px);
   justify-content: center;
   overflow: hidden;
+}
+
+.slide--side:not(.slide--intro) .slide__media--single {
+  justify-content: center;
+  align-items: center;
+}
+
+.slide--side:not(.slide--intro) .slide__media--single > .pic-glass .pic {
+  max-height: calc(100svh - 156px) !important;
+  max-width: min(54vw, calc((100svh - 156px) * 0.72)) !important;
+  width: auto !important;
+  height: auto !important;
+  object-fit: contain !important;
+  object-position: center !important;
+}
+
+/* Hometown / place card: stats left, wide photo right — full frame, no crop */
+.slide--place.slide--side .slide__copy {
+  width: min(38%, 480px);
+  padding: 12px clamp(12px, 1.4vw, 22px) 12px clamp(28px, 3.2vw, 56px);
+}
+
+.slide--place.slide--side .slide__stage {
+  inset: 64px clamp(16px, 1.8vw, 32px) 64px min(38%, 480px);
+  overflow: visible;
+  justify-content: center;
+  align-items: center;
+}
+
+.slide--place .place {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0;
+  max-width: 100%;
+}
+
+.slide--place .slide__title {
+  margin: 0 0 18px;
+  max-width: none;
+  font-size: clamp(2.8rem, 5.4vw, 4.4rem);
+  line-height: 1.05;
+  white-space: nowrap;
+}
+
+.slide--place .place__kicker {
+  margin: 0 0 6px;
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: 0.86rem;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: #3b6d94;
+  white-space: nowrap;
+}
+
+.slide--place .place__stat {
+  margin: 0 0 14px;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(3.6rem, 7vw, 5.8rem);
+  font-weight: 600;
+  font-style: italic;
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  color: #0b1f33;
+  white-space: nowrap;
+}
+
+.slide--place .place__lead {
+  margin: 0 0 22px;
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: clamp(1.12rem, 1.7vw, 1.45rem);
+  font-weight: 500;
+  line-height: 1.4;
+  color: #2a4058;
+  max-width: 16em;
+  text-wrap: pretty;
+}
+
+.slide--place .place__note {
+  margin: 0;
+  padding-top: 14px;
+  border-top: 1px solid rgba(26, 95, 168, 0.22);
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(1.5rem, 2.4vw, 2rem);
+  font-style: italic;
+  font-weight: 600;
+  color: #1a4f86;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+.slide--place.slide--side .slide__media--single > .pic-glass .pic {
+  max-width: min(64vw, 1100px) !important;
+  max-height: calc(100svh - 148px) !important;
+}
+
+/* No caption → photos full width */
+.slide--full .slide__stage {
+  inset: 44px clamp(8px, 1vw, 14px) 48px;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.slide--full .slide__copy {
+  display: none;
+}
+
+/* Caption above photo — flow so big subtitles never cover the image */
+.slide--top {
+  display: flex;
+  flex-direction: column;
+  padding: 84px 0 64px;
+  box-sizing: border-box;
+}
+
+.slide--top .slide__copy {
+  position: relative;
+  inset: auto;
+  left: auto;
+  right: auto;
+  top: auto;
+  bottom: auto;
+  order: 1;
+  width: 100%;
+  max-width: none;
+  height: auto;
+  flex: 0 0 auto;
+  padding: 4px clamp(24px, 4vw, 56px) 14px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  text-align: center;
+  overflow: visible;
+  pointer-events: none;
+  background: none;
+  z-index: 3;
+}
+
+.slide--top .slide__copy-inner {
+  max-width: min(920px, 92vw);
+  width: 100%;
+  pointer-events: auto;
+}
+
+.slide--top .slide__title {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: var(--title-size) !important;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--title-color);
+  text-wrap: balance;
+  max-width: none;
+}
+
+.slide--top .slide__sub {
+  margin-top: 10px;
+  font-family: "Manrope", system-ui, sans-serif;
+  font-style: normal;
+  font-size: var(--sub-size);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--sub-color);
+  letter-spacing: 0.01em;
+  text-wrap: pretty;
+}
+
+.slide--top .slide__stage {
+  position: relative;
+  inset: auto;
+  order: 2;
+  flex: 1 1 auto;
+  width: auto;
+  height: auto;
+  min-height: 0;
+  margin: 0 clamp(18px, 2.2vw, 40px);
+  justify-content: center;
+  overflow: hidden;
+}
+
+.slide--full .slide__media--duo-mixed,
+.slide--top .slide__media--duo-mixed {
+  gap: clamp(12px, 1.4vw, 18px);
 }
 
 .slide--side .slide__copy {
@@ -516,11 +1178,23 @@ body {
   right: auto;
   top: 80px;
   bottom: 80px;
-  width: min(28%, 420px);
+  width: min(32%, 460px);
   padding: 12px 8px 12px clamp(24px, 3vw, 52px);
   background: none;
   display: flex;
   align-items: center;
+}
+
+.slide--side:not(.slide--intro) .slide__title {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: var(--title-size);
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  color: var(--title-color);
+  text-wrap: balance;
+  max-width: 16ch;
 }
 
 .slide--intro.slide--side .slide__stage {
@@ -536,14 +1210,48 @@ body {
   max-width: 100%;
 }
 
-.slide--side .slide__title {
-  font-size: clamp(1.7rem, 2.8vw, 2.9rem);
+.slide--quote-photo.slide--side .slide__copy {
+  width: min(46%, 620px);
+  padding: 12px clamp(16px, 2vw, 28px) 12px clamp(28px, 3.4vw, 56px);
 }
 
-@media (min-width: 1600px) {
-  .slide--side .slide__title {
-    font-size: clamp(2rem, 2.4vw, 3.15rem);
-  }
+.slide--quote-photo.slide--side .slide__stage {
+  inset: 72px clamp(16px, 2vw, 32px) 72px min(46%, 620px);
+  overflow: hidden;
+  justify-content: center;
+}
+
+.slide--quote-photo.slide--side .slide__title {
+  max-width: 18ch;
+  font-size: clamp(2.2rem, 4.2vw, 3.4rem);
+}
+
+.slide--quote-photo.slide--side .slide__sub {
+  max-width: 18ch;
+}
+
+.slide--quote-photo.slide--side .slide__media--single > .pic-glass .pic {
+  max-width: min(52vw, 920px) !important;
+  max-height: calc(100svh - 160px) !important;
+}
+
+.slide--side .slide__title {
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-style: italic;
+  font-weight: 700;
+  font-size: var(--title-size);
+  color: var(--title-color);
+}
+
+.slide--side .slide__sub {
+  margin-top: 12px;
+  font-family: "Manrope", system-ui, sans-serif;
+  font-style: normal;
+  font-size: var(--sub-size);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--sub-color);
+  letter-spacing: 0.01em;
 }
 
 .slide__copy-inner {
@@ -578,22 +1286,37 @@ body {
 .slide__title {
   margin: 0;
   font-family: "Cormorant Garamond", Georgia, serif;
-  font-weight: 600;
-  font-size: clamp(1.7rem, 4.2vw, 3rem);
+  font-style: italic;
+  font-weight: 700;
+  font-size: var(--title-size);
   line-height: 1.18;
   letter-spacing: -0.02em;
-  color: #111827;
+  color: var(--title-color);
   text-shadow: none;
   text-wrap: pretty;
   overflow-wrap: normal;
   hyphens: none;
 }
 
-.slide__title .title-tagline {
-  display: block;
-  margin-top: 0.22em;
+/* Base subtitle — same size everywhere; distinct via sans + color */
+.slide__sub {
+  margin: 0;
+  font-family: "Manrope", system-ui, sans-serif;
+  font-style: normal;
+  font-weight: 600;
+  font-size: var(--sub-size);
+  line-height: 1.4;
+  letter-spacing: 0.01em;
+  color: var(--sub-color);
+  text-wrap: pretty;
+}
+
+.slide__title .title-tagline,
+.slide__sub .title-tagline {
+  display: inline;
+  margin-top: 0;
   white-space: nowrap;
-  font-size: 0.58em;
+  font-size: 0.92em;
   font-style: italic;
   letter-spacing: 0.06em;
   opacity: 0.88;
@@ -629,10 +1352,13 @@ body {
 .slide--text .slide__copy {
   top: 0;
   bottom: 0;
-  width: min(72%, 920px);
+  left: 0;
+  right: 0;
+  width: 100%;
+  max-width: none;
   display: grid;
   align-items: center;
-  padding-top: 80px;
+  padding: 88px clamp(28px, 5vw, 80px) 96px;
   background: none;
   transform: none;
 }
@@ -641,27 +1367,225 @@ body {
   transform: none;
 }
 
+.slide--text .slide__copy-inner {
+  max-width: min(1180px, 100%);
+  width: 100%;
+}
+
 .slide--text .slide__title {
-  font-size: clamp(2.3rem, 6.4vw, 4.6rem);
+  font-size: clamp(2.35rem, 5.2vw, 4.2rem);
   font-style: italic;
   font-weight: 600;
-  max-width: 16ch;
-  line-height: 1.14;
+  max-width: min(42ch, 100%);
+  line-height: 1.18;
+  letter-spacing: -0.025em;
+  color: #0b1f33;
+  text-wrap: pretty;
 }
 
 .slide--text .quote {
   display: flex;
-  align-items: flex-start;
-  gap: clamp(18px, 2.4vw, 32px);
-  max-width: 920px;
+  align-items: stretch;
+  gap: clamp(18px, 2.2vw, 28px);
+  width: 100%;
+  max-width: none;
 }
 
 .slide--text .quote__line {
-  flex: 0 0 1px;
-  width: 1px;
-  height: 4.8em;
-  margin-top: 0.28em;
-  background: linear-gradient(180deg, rgba(59, 109, 148, 0.9), rgba(59, 109, 148, 0.08));
+  flex: 0 0 2px;
+  width: 2px;
+  align-self: stretch;
+  min-height: 4.5em;
+  margin: 0.15em 0;
+  border-radius: 2px;
+  background: linear-gradient(
+    180deg,
+    rgba(26, 95, 168, 0.95),
+    rgba(26, 95, 168, 0.18) 70%,
+    rgba(26, 95, 168, 0.02)
+  );
+}
+
+.slide--text .quote__stack {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(18px, 2.4vw, 28px);
+}
+
+/* No photos → give copy the full width for reading */
+.slide--text .quote--rich .quote__stack {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: clamp(22px, 3vw, 36px);
+  max-width: min(920px, 100%);
+}
+
+.slide--text .quote--rich .slide__title {
+  max-width: min(40ch, 100%);
+  margin: 0;
+}
+
+.slide--text .slide__lead {
+  margin: 0;
+  max-width: min(36ch, 100%);
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: clamp(1.25rem, 2.2vw, 1.85rem);
+  font-weight: 500;
+  line-height: 1.4;
+  letter-spacing: -0.01em;
+  color: #1a3a5c;
+}
+
+.slide--text .slide__points {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.3vw, 16px);
+  max-width: min(42ch, 100%);
+}
+
+.slide--text .slide__point {
+  position: relative;
+  margin: 0;
+  padding: 0 0 0 1.15em;
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: clamp(1.05rem, 1.7vw, 1.4rem);
+  font-weight: 500;
+  line-height: 1.35;
+  color: #243447;
+}
+
+.slide--text .slide__point::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.55em;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #1a5fa8;
+  box-shadow: 0 0 0 3px rgba(26, 95, 168, 0.12);
+}
+
+.slide--text .slide__point--lead {
+  font-weight: 600;
+  font-size: clamp(1.1rem, 1.85vw, 1.5rem);
+  color: #0a2f57;
+  letter-spacing: -0.015em;
+}
+
+.slide--text .slide__point--punch {
+  font-style: italic;
+  font-weight: 500;
+  color: #3b4d63;
+}
+
+.slide--text .slide__point-name {
+  display: inline;
+  font-weight: 600;
+  color: #0a2f57;
+}
+
+.slide--text .slide__point-role {
+  display: inline;
+  font-weight: 400;
+  color: #4b5c70;
+}
+
+.slide--text .slide__point-name::after {
+  content: " — ";
+  font-weight: 400;
+  color: rgba(26, 95, 168, 0.55);
+}
+
+/* Mentors roster — same type as the next text slide, never overflow */
+.slide--roster.slide--text .slide__copy {
+  overflow: hidden;
+  padding: 88px clamp(28px, 5vw, 80px) 96px;
+}
+
+.slide--roster.slide--text .slide__copy-inner {
+  max-width: min(1180px, 100%);
+  width: 100%;
+  overflow: hidden;
+}
+
+.slide--roster.slide--text .quote--rich .quote__stack {
+  max-width: min(920px, 100%);
+  width: 100%;
+  gap: clamp(18px, 2.4vw, 28px);
+}
+
+.slide--roster.slide--text .slide__points {
+  width: 100%;
+  max-width: 100%;
+  gap: clamp(18px, 2.6vw, 28px);
+}
+
+.slide--roster.slide--text .slide__point,
+.slide--roster.slide--text .slide__point--lead,
+.slide--roster.slide--text .slide__point--punch {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 2px;
+  width: 100%;
+  max-width: 100%;
+  padding-left: 0 !important;
+  font-size: inherit !important;
+  font-weight: 400 !important;
+  font-style: normal !important;
+  line-height: 1.15;
+  letter-spacing: 0;
+  white-space: normal;
+  color: inherit !important;
+}
+
+.slide--roster.slide--text .slide__point::before {
+  display: none;
+}
+
+.slide--roster.slide--text .slide__point-name {
+  display: block;
+  max-width: 100%;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: clamp(2.35rem, 5.2vw, 4.2rem);
+  font-style: italic;
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.025em;
+  color: #0b1f33;
+}
+
+.slide--roster.slide--text .slide__point-name::after {
+  content: none;
+}
+
+.slide--roster.slide--text .slide__point-role {
+  display: block;
+  max-width: 100%;
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: clamp(1.25rem, 2.2vw, 1.85rem);
+  font-weight: 500;
+  font-style: normal;
+  line-height: 1.35;
+  letter-spacing: -0.01em;
+  color: #1a3a5c;
+}
+
+@media (max-width: 860px) {
+  .slide--text .quote--rich .quote__stack {
+    gap: clamp(16px, 3vw, 24px);
+  }
+
+  .slide--text .quote--rich .slide__title {
+    max-width: min(22ch, 100%);
+  }
 }
 
 /* Slide 1 intro: quiet beat, then photos */
@@ -698,14 +1622,92 @@ body {
   opacity: 1;
 }
 
-.slide--contact .slide__copy {
+.slide--manifesto .slide__copy {
+  left: 0;
+  right: 0;
   top: 0;
   bottom: 0;
-  width: min(72%, 920px);
-  display: grid;
+  width: 100%;
+  max-width: none;
+  display: flex;
   align-items: center;
-  padding-top: 72px;
+  justify-content: center;
+  padding: 72px clamp(24px, 4vw, 56px) 80px;
   background: none;
+  text-align: center;
+}
+
+.slide--manifesto .slide__copy-inner {
+  width: auto;
+  max-width: min(920px, 92vw);
+  display: flex;
+  justify-content: center;
+}
+
+.slide--manifesto .manifesto {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(18px, 2.4vw, 28px);
+  text-align: center;
+}
+
+.slide--manifesto .slide__title {
+  margin: 0;
+  max-width: none;
+  font-size: clamp(3rem, 8vw, 5.6rem);
+  font-style: italic;
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  color: #0b1f33;
+  text-wrap: balance;
+}
+
+.slide--manifesto .manifesto__body {
+  margin: 0;
+  max-width: min(28ch, 100%);
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: clamp(1.15rem, 2.2vw, 1.75rem);
+  font-weight: 500;
+  line-height: 1.45;
+  letter-spacing: -0.01em;
+  color: #1a3a5c;
+  text-wrap: pretty;
+}
+
+.slide--manifesto .manifesto__tag {
+  margin: 4px 0 0;
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: clamp(0.78rem, 1.2vw, 0.95rem);
+  font-weight: 700;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: #3b6d94;
+}
+
+.slide--contact .slide__copy {
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+  max-width: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 72px clamp(24px, 4vw, 56px) 80px;
+  background: none;
+  text-align: center;
+}
+
+.slide--contact .slide__copy-inner {
+  width: auto;
+  max-width: min(920px, 100%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
 }
 
 .slide--contact .slide__stage {
@@ -715,8 +1717,11 @@ body {
 .contact {
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
-  gap: 14px;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  width: 100%;
+  text-align: center;
 }
 
 .contact__kicker {
@@ -745,18 +1750,12 @@ body {
   color: #1d4e89;
 }
 
-.contact__hint {
-  margin: 0;
-  font-size: 0.9rem;
-  opacity: 0.7;
-}
-
 .contact__qr {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  margin-top: 8px;
+  margin-top: 10px;
   padding: 12px;
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.94);
@@ -774,10 +1773,7 @@ body {
   display: block;
 }
 
-.slide:not(.slide--text) .pic-glass {
-  cursor: zoom-in;
-}
-
+.slide:not(.slide--text) .pic-glass,
 .slide:not(.slide--text) .pic-glass--solo {
   cursor: default;
 }
@@ -791,7 +1787,20 @@ body {
 .slide__media--single > .pic-glass,
 .slide__media--ill > .pic-glass {
   max-width: 100%;
-  max-height: 100%;
+  width: fit-content;
+  height: fit-content;
+  flex: 0 0 auto;
+}
+
+.slide--top .slide__media--single > .pic-glass,
+.slide--top .slide__media--single > .pic-stack {
+  max-width: 100%;
+}
+
+/* One-off: cards photo — step back, less “macro” fill */
+.slide--media-pullback .slide__media--single > .pic-glass .pic {
+  max-width: min(58vw, 704px) !important;
+  max-height: min(62svh, 624px) !important;
 }
 
 .slide:not(.slide--text) .pic-glass.is-zooming {
@@ -876,6 +1885,15 @@ body {
 
   .chrome__hint {
     display: none;
+  }
+
+  .chrome__motto {
+    display: none;
+  }
+
+  .chrome--bottom {
+    display: flex;
+    justify-content: space-between;
   }
 
   .slide__copy {

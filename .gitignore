@@ -7,3 +7,11 @@ dist/
 content_all.txt
 *.pdf
 .vercel
+__pycache__/
+Нечіпати/
+*.key
+*.key/
+*.broken.zip
+*.pptx
+assets/photos/*.before-*.jpg
+assets/photos/*.overcrop.jpg
